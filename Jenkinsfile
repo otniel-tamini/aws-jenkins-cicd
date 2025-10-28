@@ -46,7 +46,7 @@ pipeline {
             steps {
                 script {
                     sh """
-                        ssh -o StrictHostKeyChecking=no -i ~/.ssh/skool-key.pem ec2-user@54.146.221.14 '
+                        ssh -o StrictHostKeyChecking=no -i ~/.ssh/skool-key.pem ec2-user@54.81.20.120 '
                             docker pull ${IMAGE_NAME}:${env.BUILD_NUMBER}
                             docker stop flask-app || true
                             docker rm flask-app || true
