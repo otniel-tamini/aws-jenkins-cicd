@@ -1,0 +1,79 @@
+---
+- name: Deploy Jenkins on EC2 instance
+  hosts: all
+  become: yes
+  tasks:
+    - name: Update software packages
+      yum:
+        name: '*'
+        state: latest
+
+    - name: Add Jenkins repo
+      get_url:
+        url: https://pkg.jenkins.io/redhat-stable/jenkins.repo
+        dest: /etc/yum.repos.d/jenkins.repo
+
+    - name: Import Jenkins key
+      rpm_key:
+        key: https://pkg.jenkins.io/redhat-stable/jenkins.io-2023.key
+        state: present
+
+    - name: Upgrade packages
+      yum:
+        name: '*'
+        state: latest
+
+    - name: Install Java 21
+      yum:
+        name: java-21-amazon-corretto
+        state: present
+
+    - name: Install Jenkins
+      yum:
+        name: jenkins
+        state: present
+
+    - name: Enable Jenkins service
+      service:
+        name: jenkins
+        enabled: yes
+
+    - name: Start Jenkins service
+      service:
+        name: jenkins
+        state: started
+
+    - name: Check Jenkins status
+      command: systemctl status jenkins
+      register: jenkins_status
+
+    - name: Display Jenkins status
+      debug:
+        msg: "{{ jenkins_status.stdout }}"
+
+    - name: Get initial admin password
+      command: cat /var/lib/jenkins/secrets/initialAdminPassword
+      register: jenkins_password
+      ignore_errors: yes
+
+    - name: Display Jenkins initial admin password
+      debug:
+        msg: "Jenkins initial admin password: {{ jenkins_password.stdout }}"
+      when: jenkins_password.rc == 0
+
+    - name: Install Docker on Amazon Linux 2
+      yum:
+        name: docker
+        state: present
+
+    - name: Enable and start Docker service
+      systemd:
+        name: docker
+        enabled: yes
+        state: started
+
+    - name: Add ec2-user to docker group
+      user:
+        name: ec2-user
+        groups: docker
+        append: yes
