@@ -1,134 +1,177 @@
-# Movie Recommendation System (MRS)
+# AWS Jenkins CI/CD Setup
 
-This repository contains all the project files and necessary details about applications required to run the project on your local machine as well as host it as a Django Application on your Server/Domain.
+Ce projet fournit une infrastructure complète CI/CD avec Jenkins sur AWS utilisant Terraform pour l'infrastructure et Ansible pour le déploiement.
 
-| Title                                    | Description                                                                                                         | Link                                                                                                                       |
-| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| Demo :movie_camera:                      | Sample Demo of MRS Hosted on free cloud PaaS                                                                        | [:point_down: Refer](https://github.com/inboxpraveen/movie-recommendation-system#1-demo-movie_camera)                      |
-| Requirements :heavy_check_mark:          | Requirements and essential links to get started with the project locally                                            | [:point_down: Refer](https://github.com/inboxpraveen/movie-recommendation-system#2-requirements-heavy_check_mark)          |
-| Model Training :small_red_triangle_down: | How the MRS was trained for Demo as well as on Large Movie Dataset from Kaggle                                      | [:point_down: Refer](https://github.com/inboxpraveen/movie-recommendation-system#3-model-training-small_red_triangle_down) |
-| Project Versatility :page_with_curl:     | Reference documentation of how to plug in any general recommendation model into this project and host it on servers | [:point_down:Refer](https://github.com/inboxpraveen/movie-recommendation-system#4-project-guide)                           |
-| Troubleshooting Issues :muscle:          | Guide to resolve errors faced during reproducibility                                                                | To be Updated                                                                                                              |
+## Architecture
 
-Do you like it? :heart: Follow me on [Twitter](https://twitter.com/InboxPraveen), [GitHub](https://github.com/inboxpraveen), & [LinkedIn](https://www.linkedin.com/in/praveen-kumar-inbox/) to say Hi :wave:
+- **Jenkins Controller** : Instance EC2 avec Jenkins et Docker
+- **Serveur de Déploiement** : Instance EC2 avec Docker pour les déploiements
+- **Pipeline CI/CD** : Pipeline Jenkins pour build, test et déploiement d'applications Flask
 
-<hr>
+## Prérequis
 
-## 1. Demo :movie_camera:
+### Comptes et Outils
+- Compte AWS avec permissions pour créer des instances EC2
+- Clé SSH (par défaut `skool-key`)
+- Git
+- Terraform >= 1.0
+- Ansible >= 2.9
+- Docker Hub account (pour le push des images)
 
-In this section, we try to understand through video demo to play around the project and what all can be achieved through it.
-
-1. [Movie Recommendation System Hosted Application Demo](https://movie-recommendation-8g56.onrender.com/)
-
-2. [Running MRS on local System](https://github.com/inboxpraveen/movie-recommendation-system/tree/master#42-running-in-local)
-
-3. Sample Screenshots
-
-   1. Home Screen
-
-      <img src="static/images/ss1.png" alt="Home Screen" />
-
-   2. Navigation Screen
-
-      <img src="static/images/ss2.png" alt="Navigation Screen" />
-
-   3. Search with Auto Suggestion
-
-      <img src="static/images/ss3.png" alt="Search Functionality" />
-
-   4. Recommended Movies
-
-      <img src="static/images/ss4.png" alt="Movie Recommended Results" />
-
-
-____
-
-***Please be slightly patient while I create and upload the demo video. Follow and star this project to get latest notifications and update. :raised_hands:***
-
-<hr>
-
-## 2. Requirements :heavy_check_mark:
-
-To build this project without any errors/issues, the following requirements needs to be satisfied
-
-1. Create a Virtual Environment using python>=3.8 (Tested on 3.9.16)
-
-2. Install the dependencies from the requirements text file from the repository.
-
-<hr>
-
-## 3. Model Training :small_red_triangle_down:
-
-### 3.1 Training & Inference
-
-For complete guide to training your model and inference using the trained model, refer to "[Movie Recommendation System Python Notebook](https://github.com/inboxpraveen/movie-recommendation-system/blob/master/Movie_Recommendation_System_Complete_Guide.ipynb)".
-
-#### 3.2 Django Web Application Integration
-
-[Here is a detailed blog](https://medium.com/analytics-vidhya/movie-recommendation-system-python-flask-web-application-heroku-deployment-7e39492b640c) explaining about complete approach and directory structure essential to understand Django integration.
-
-<hr>
-
-## 4. Project Guide
-
-#### 4.1 Running it OnRender Free Cloud
-
-[Here is a detailed blog](https://medium.com/analytics-vidhya/movie-recommendation-system-python-flask-web-application-heroku-deployment-7e39492b640c) explaining about complete approach and essential details to deploy not just this application but also any other web-application you like to built.
-
-#### 4.2 Running in Local
-
-I am assuming you have completed [section 2](https://github.com/inboxpraveen/movie-recommendation-system#2-requirements-heavy_check_mark) in the above reference for creating your environment. Let's start by activating it.
-
-```shell
-/path/to/env/bin/activate
+### Configuration AWS
+```bash
+aws configure
+# Entrez votre Access Key ID, Secret Access Key, région par défaut (us-east-1)
 ```
 
-Once done, you should go to project root directory and run the following command
+## Installation et Configuration
 
-```she
-python manage.py runserver
+### 1. Cloner le dépôt
+```bash
+git clone https://github.com/otniel-tamini/aws-jenkins-cicd.git
+cd aws-jenkins-cicd
 ```
 
-It will take a moment and then show the following output on the terminal.
-
-<img title="" src="./readme_images/runserver_demo.png" alt="">
-
-You can now open your browser and hit the server IP `http://localhost:8000` provided to run the demo on your local system. 
-
-By default, this project will run on Demo model. If you wish to change model, you can train and download the model of your choice using the python notebook to get better or faster recommendations. Once trained, you can integrate by modifying these 2 lines of code inside `recommender/views.py`
-
-```python
-Line 5 : movies_data = pd.read_parquet("static/<dataset_name>.parquet")
-Line 73: model = pa.parquet.read_table('static/<model_name>.parquet').to_pandas()
+### 2. Configuration des clés SSH
+Assurez-vous que votre clé privée est dans `~/.ssh/skool-key.pem` avec les bonnes permissions :
+```bash
+chmod 400 ~/.ssh/skool-key.pem
 ```
 
-Note that you have to place dataset and model into the `static` directory.
+### 3. Déploiement de l'infrastructure
+```bash
+cd terraform
+terraform init
+terraform plan
+terraform apply -auto-approve
+```
 
+Notez les IPs publiques affichées en output.
 
-This code implements a movie recommendation system based on user input. The system provides a simple web interface built on HTML, CSS, and JavaScript libraries. 
+### 4. Configuration Ansible
+Mettez à jour `ansible/hosts.ini` avec les IPs des instances créées :
+```ini
+[jenkins_servers]
+jenkins ansible_host=<JENKINS_IP> ansible_user=ec2-user ansible_ssh_private_key_file=~/.ssh/skool-key.pem
 
-Inputs: The user can search for movies by providing a partial or complete movie name. 
+[deployment_servers]
+deployment ansible_host=<DEPLOYMENT_IP> ansible_user=ec2-user ansible_ssh_private_key_file=~/.ssh/skool-key.pem
+```
 
-Outputs: The system provides movie recommendations based on user input. 
+### 5. Déploiement des services
+```bash
+cd ansible
+ansible-playbook -i hosts.ini -l jenkins_servers deploy_jenkins.yml
+ansible-playbook -i hosts.ini -l deployment_servers prepare_deployment.yml
+```
 
-Dependencies: 
+## Configuration Jenkins
 
-* `static/recommender/` -- contains the following CSS files: `cursor.css`, `page.css`, and `navbar.css`
-* `static/logo.png` -- the logo of the application
-* `static/production ID_4779866.mp4` -- a background video for the web page
-* `@tabler/icons@latest/iconfont/tabler-icons.min.css`
-* `normalize/5.0.0/normalize.min.css`
-* `jquery-ui.css`
-* `font-awesome.min.css`
-* `bootstrap.min.css`
-* `jquery.min.js`
-* `jquery-ui.js`
+### Accès initial
+1. Ouvrez http://<JENKINS_IP>:8080
+2. Utilisez le mot de passe admin affiché dans les logs Ansible
+3. Suivez l'assistant de configuration
 
-Usage:
+### Configuration des credentials Docker Hub
+1. Dans Jenkins : Manage Jenkins > Credentials > System > Global credentials
+2. Ajoutez des credentials de type "Username with password"
+3. ID : `dockerhub-login`
+4. Username : votre username Docker Hub
+5. Password : votre token Docker Hub
 
-1. Open the HTML file in a web browser.
-2. Type the name of a movie in the search bar, and the system will provide the movie recommendation. 
+### Configuration du pipeline
+1. Modifiez le `Jenkinsfile` :
+   - Remplacez `your_dockerhub_username` par votre username Docker Hub
+   - Remplacez l'URL du repo Git par votre repo
+   - Ajustez l'IP de déploiement si nécessaire
 
-Note: Only the top 2.5K movies based on IMBD are present in this system's database.
+2. Créez un nouveau job Pipeline :
+   - New Item > Pipeline
+   - Pipeline script from SCM
+   - SCM : Git
+   - Repository URL : https://github.com/otniel-tamini/aws-jenkins-cicd.git
+   - Script Path : Jenkinsfile
 
-> **Working on [version 2 of movie recommendation system on new repository](https://github.com/inboxpraveen/movie-recommendation-system-version-2) which can process 1 million movies within similar memory footprints, better recommendations, and diverse selections, with added features like recommendation bucket and mutual sharing. Stay tuned and do not forget to start the repository to reach out to open-source community.**
+## Utilisation du Pipeline
+
+Le pipeline comprend 5 étapes :
+
+1. **Checkout Code** : Récupération du code source
+2. **Build Docker Image** : Construction de l'image Docker
+3. **Run Unit Tests** : Exécution des tests dans le conteneur
+4. **Push to Docker Hub** : Push de l'image vers Docker Hub
+5. **Deploy to EC2** : Déploiement sur le serveur de déploiement
+
+### Préparation de votre application
+Votre application doit avoir :
+- Un `Dockerfile`
+- Des tests unitaires exécutables avec `pytest`
+- Un `requirements.txt` pour Python
+
+## Connexion aux instances
+
+```bash
+# Jenkins Controller
+ssh -i ~/.ssh/skool-key.pem ec2-user@<JENKINS_IP>
+
+# Serveur de déploiement
+ssh -i ~/.ssh/skool-key.pem ec2-user@<DEPLOYMENT_IP>
+```
+
+## Nettoyage
+
+Pour détruire toute l'infrastructure :
+```bash
+cd terraform
+terraform destroy -auto-approve
+```
+
+## Dépannage
+
+### Erreur de connexion SSH
+- Vérifiez les permissions de la clé : `chmod 400 ~/.ssh/skool-key.pem`
+- Ajoutez les clés hôtes : `ssh-keyscan -H <IP> >> ~/.ssh/known_hosts`
+
+### Jenkins ne démarre pas
+- Vérifiez les logs : `sudo journalctl -u jenkins -f`
+- Redémarrez le service : `sudo systemctl restart jenkins`
+
+### Pipeline échoue
+- Vérifiez les credentials Docker Hub
+- Assurez-vous que le repo Git est accessible
+- Vérifiez les logs du build Jenkins
+
+### Problème de disque
+Si vous voyez des avertissements de disque, l'instance a été configurée avec 50GB.
+
+## Personnalisation
+
+### Changer la région AWS
+Modifiez `terraform/main.tf` :
+```hcl
+provider "aws" {
+  region = "eu-west-1"  # ou autre région
+}
+```
+
+### Changer le type d'instance
+Modifiez la variable `instance_type` dans `terraform/main.tf` :
+```hcl
+variable "instance_type" {
+  default = "t3.small"  # ou autre type
+}
+```
+
+### Ajouter des plugins Jenkins
+Modifiez `ansible/deploy_jenkins.yml` pour installer des plugins supplémentaires.
+
+## Support
+
+Si vous rencontrez des problèmes :
+1. Vérifiez les logs Ansible/Terraform
+2. Consultez les issues GitHub
+3. Vérifiez votre configuration AWS
+
+## Licence
+
+Ce projet est sous licence MIT.
