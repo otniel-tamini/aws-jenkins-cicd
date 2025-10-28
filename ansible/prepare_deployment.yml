@@ -1,0 +1,36 @@
+---
+- name: Prepare Deployment Server
+  hosts: deployment_servers
+  become: yes
+  tasks:
+    - name: Update software packages
+      yum:
+        name: '*'
+        state: latest
+
+    - name: Install Docker on Amazon Linux 2
+      yum:
+        name: docker
+        state: present
+
+    - name: Enable and start Docker service
+      systemd:
+        name: docker
+        enabled: yes
+        state: started
+
+    - name: Add ec2-user to docker group
+      user:
+        name: ec2-user
+        groups: docker
+        append: yes
+
+    - name: Increase /tmp size
+      command: mount -t tmpfs -o remount,size=2G tmpfs /tmp
+      ignore_errors: yes
+
+    - name: Make /tmp size permanent
+      lineinfile:
+        path: /etc/fstab
+        line: 'tmpfs /tmp tmpfs defaults,size=2G 0 0'
+        create: yes
