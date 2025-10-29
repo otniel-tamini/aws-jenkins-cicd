@@ -50,7 +50,7 @@ pipeline {
                             docker pull ${IMAGE_NAME}:${env.BUILD_NUMBER}
                             docker stop flask-app || true
                             docker rm flask-app || true
-                            docker run -d --name flask-app -p 5000:5000 ${IMAGE_NAME}:${env.BUILD_NUMBER}
+                            docker run -d --name flask-app -p 5000:8000 ${IMAGE_NAME}:${env.BUILD_NUMBER}
                         '
                     """
                 }
