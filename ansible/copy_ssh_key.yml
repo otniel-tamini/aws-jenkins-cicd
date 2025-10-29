@@ -1,0 +1,44 @@
+---
+- name: Copy SSH key to Jenkins server for deployment access
+  hosts: jenkins_servers
+  become: yes
+  vars:
+    local_ssh_key_path: "~/.ssh/skool-key.pem"
+    remote_ssh_key_path: "/var/lib/jenkins/.ssh/id_rsa"
+    deployment_server_ip: "{{ hostvars[groups['deployment_servers'][0]]['ansible_host'] }}"
+
+  tasks:
+    - name: Create .ssh directory for jenkins user
+      file:
+        path: /var/lib/jenkins/.ssh
+        state: directory
+        owner: jenkins
+        group: jenkins
+        mode: '0700'
+
+    - name: Copy SSH private key from local machine to Jenkins server
+      copy:
+        src: "{{ local_ssh_key_path }}"
+        dest: "{{ remote_ssh_key_path }}"
+        owner: jenkins
+        group: jenkins
+        mode: '0600'
+
+    - name: Add deployment server to known_hosts
+      known_hosts:
+        name: "{{ deployment_server_ip }}"
+        key: "{{ lookup('pipe', 'ssh-keyscan -H ' + deployment_server_ip) }}"
+        state: present
+        path: /var/lib/jenkins/.ssh/known_hosts
+
+    - name: Test SSH connection to deployment server
+      command: ssh -o StrictHostKeyChecking=no -i {{ remote_ssh_key_path }} ec2-user@{{ deployment_server_ip }} "echo 'SSH connection successful'"
+      become: yes
+      become_user: jenkins
+      register: ssh_test
+      failed_when: ssh_test.rc != 0
+      ignore_errors: yes
+
+    - name: Display SSH test result
+      debug:
+        msg: "{{ ssh_test.stdout if ssh_test.rc == 0 else 'SSH test failed: ' + ssh_test.stderr }}"

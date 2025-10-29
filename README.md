@@ -146,6 +146,19 @@ terraform destroy -auto-approve
 ### Problème de disque
 Si vous voyez des avertissements de disque, l'instance a été configurée avec 50GB.
 
+### Montage d'un stockage temporaire sur /tmp
+Pour éviter les problèmes d'espace lors des builds ou des installations, il est recommandé de monter un stockage temporaire de 2G sur `/tmp` :
+
+```bash
+sudo mount -t tmpfs -o size=2G tmpfs /tmp
+```
+
+Pour rendre ce montage persistant, ajoutez la ligne suivante à `/etc/fstab` :
+
+```bash
+tmpfs /tmp tmpfs defaults,size=2G 0 0
+```
+
 ## Personnalisation
 
 ### Changer la région AWS

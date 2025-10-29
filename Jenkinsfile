@@ -2,14 +2,14 @@ pipeline {
     agent any
 
     environment {
-        DOCKERHUB_CREDENTIALS = credentials('dockerhub-login')
+        DOCKERHUB_CREDENTIALS = credentials('docker-credentials')
         IMAGE_NAME = "otniel217/flask-ci-cd-demo"
     }
 
     stages {
         stage('Checkout Code') {
             steps {
-                git branch: 'master', url: 'https://github.com/your-username/your-repo.git'
+                git branch: 'master', url: 'https://github.com/otniel-tamini/aws-jenkins-cicd.git'
             }
         }
 
