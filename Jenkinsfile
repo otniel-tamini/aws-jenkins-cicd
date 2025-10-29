@@ -3,13 +3,13 @@ pipeline {
 
     environment {
         DOCKERHUB_CREDENTIALS = credentials('dockerhub-login')
-        IMAGE_NAME = "your_dockerhub_username/flask-ci-cd-demo"
+        IMAGE_NAME = "otniel217/flask-ci-cd-demo"
     }
 
     stages {
         stage('Checkout Code') {
             steps {
-                git branch: 'main', url: 'https://github.com/your-username/your-repo.git'
+                git branch: 'master', url: 'https://github.com/your-username/your-repo.git'
             }
         }
 
@@ -46,7 +46,7 @@ pipeline {
             steps {
                 script {
                     sh """
-                        ssh -o StrictHostKeyChecking=no -i ~/.ssh/skool-key.pem ec2-user@54.81.20.120 '
+                        ssh -o StrictHostKeyChecking=no -i ~/.ssh/skool-key.pem ec2-user@54.91.166.242 '
                             docker pull ${IMAGE_NAME}:${env.BUILD_NUMBER}
                             docker stop flask-app || true
                             docker rm flask-app || true
