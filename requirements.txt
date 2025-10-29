@@ -6,3 +6,4 @@ whitenoise
 fastparquet
 pyarrow
 pytest
+pytest-django
