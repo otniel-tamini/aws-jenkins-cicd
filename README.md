@@ -1,47 +1,48 @@
 
 
 
+
 # AWS Jenkins CI/CD Setup
 
-Ce projet fournit une infrastructure complète CI/CD avec Jenkins sur AWS utilisant Terraform pour l'infrastructure et Ansible pour le déploiement.
+This project provides a complete CI/CD infrastructure with Jenkins on AWS, using Terraform for infrastructure provisioning and Ansible for server configuration.
 
 ## Architecture
 
-- **Jenkins Controller** : Instance EC2 avec Jenkins et Docker
-- **Serveur de Déploiement** : Instance EC2 avec Docker pour les déploiements
-- **Pipeline CI/CD** : Pipeline Jenkins pour build, test et déploiement d'applications Flask
+- **Jenkins Controller**: EC2 instance with Jenkins and Docker
+- **Deployment Server**: EC2 instance with Docker for application deployments
+- **CI/CD Pipeline**: Jenkins pipeline for building, testing, and deploying Flask (or Django) applications
 
-## Prérequis
+## Prerequisites
 
-### Comptes et Outils
-- Compte AWS avec permissions pour créer des instances EC2
-- Clé SSH (par défaut `skool-key`)
+### Accounts & Tools
+- AWS account with permissions to create EC2 instances
+- SSH key (default: `skool-key`)
 - Git
 - Terraform >= 1.0
 - Ansible >= 2.9
-- Docker Hub account (pour le push des images)
+- Docker Hub account (for pushing images)
 
-### Configuration AWS
+### AWS Configuration
 ```bash
 aws configure
-# Entrez votre Access Key ID, Secret Access Key, région par défaut (us-east-1)
+# Enter your Access Key ID, Secret Access Key, default region (us-east-1)
 ```
 
-## Installation et Configuration
+## Installation & Setup
 
-### 1. Cloner le dépôt
+### 1. Clone the repository
 ```bash
 git clone https://github.com/otniel-tamini/aws-jenkins-cicd.git
 cd aws-jenkins-cicd
 ```
 
-### 2. Configuration des clés SSH
-Assurez-vous que votre clé privée est dans `~/.ssh/skool-key.pem` avec les bonnes permissions :
+### 2. SSH Key Setup
+Ensure your private key is at `~/.ssh/skool-key.pem` with correct permissions:
 ```bash
 chmod 400 ~/.ssh/skool-key.pem
 ```
 
-### 3. Déploiement de l'infrastructure
+### 3. Deploy Infrastructure
 ```bash
 cd terraform
 terraform init
@@ -49,10 +50,10 @@ terraform plan
 terraform apply -auto-approve
 ```
 
-Notez les IPs publiques affichées en output.
+Note the public IPs displayed in the output.
 
-### 4. Configuration Ansible
-Mettez à jour `ansible/hosts.ini` avec les IPs des instances créées :
+### 4. Ansible Configuration
+Update `ansible/hosts.ini` with the IPs of the created instances:
 ```ini
 [jenkins_servers]
 jenkins ansible_host=<JENKINS_IP> ansible_user=ec2-user ansible_ssh_private_key_file=~/.ssh/skool-key.pem
@@ -61,136 +62,134 @@ jenkins ansible_host=<JENKINS_IP> ansible_user=ec2-user ansible_ssh_private_key_
 deployment ansible_host=<DEPLOYMENT_IP> ansible_user=ec2-user ansible_ssh_private_key_file=~/.ssh/skool-key.pem
 ```
 
-### 5. Déploiement des services
+### 5. Deploy Services
 ```bash
 cd ansible
 ansible-playbook -i hosts.ini -l jenkins_servers deploy_jenkins.yml
 ansible-playbook -i hosts.ini -l deployment_servers prepare_deployment.yml
 ```
 
-## Configuration Jenkins
+## Jenkins Configuration
 
-### Accès initial
-1. Ouvrez http://<JENKINS_IP>:8080
-2. Utilisez le mot de passe admin affiché dans les logs Ansible
-3. Suivez l'assistant de configuration
+### Initial Access
+1. Open http://<JENKINS_IP>:8080
+2. Use the admin password shown in the Ansible logs
+3. Follow the setup wizard
 
-### Configuration des credentials Docker Hub
-1. Dans Jenkins : Manage Jenkins > Credentials > System > Global credentials
-2. Ajoutez des credentials de type "Username with password"
-3. ID : `dockerhub-login`
-4. Username : votre username Docker Hub
-5. Password : votre token Docker Hub
+### Docker Hub Credentials
+1. In Jenkins: Manage Jenkins > Credentials > System > Global credentials
+2. Add credentials of type "Username with password"
+3. ID: `DOCKERHUB_CREDENTIALS`
+4. Username: your Docker Hub username
+5. Password: your Docker Hub token
 
-### Configuration du pipeline
-1. Modifiez le `Jenkinsfile` :
-   - Remplacez `your_dockerhub_username` par votre username Docker Hub
-   - Remplacez l'URL du repo Git par votre repo
-   - Ajustez l'IP de déploiement si nécessaire
+### Pipeline Setup
+1. Edit the `Jenkinsfile`:
+  - Replace `your_dockerhub_username` with your Docker Hub username
+  - Replace the Git repo URL with your own repo
+  - Adjust the deployment IP if needed
 
-2. Créez un nouveau job Pipeline :
-   - New Item > Pipeline
-   - Pipeline script from SCM
-   - SCM : Git
-   - Repository URL : https://github.com/otniel-tamini/aws-jenkins-cicd.git
-   - Script Path : Jenkinsfile
+2. Create a new Pipeline job:
+  - New Item > Pipeline
+  - Pipeline script from SCM
+  - SCM: Git
+  - Repository URL: https://github.com/otniel-tamini/aws-jenkins-cicd.git
+  - Script Path: Jenkinsfile
 
-## Utilisation du Pipeline
+## Pipeline Usage
 
-Le pipeline comprend 5 étapes :
+The pipeline includes 5 stages:
 
-1. **Checkout Code** : Récupération du code source
-2. **Build Docker Image** : Construction de l'image Docker
-3. **Run Unit Tests** : Exécution des tests dans le conteneur
-4. **Push to Docker Hub** : Push de l'image vers Docker Hub
-5. **Deploy to EC2** : Déploiement sur le serveur de déploiement
+1. **Checkout Code**: Retrieve source code
+2. **Build Docker Image**: Build the Docker image
+3. **Run Unit Tests**: Run tests inside the container
+4. **Push to Docker Hub**: Push the image to Docker Hub
+5. **Deploy to EC2**: Deploy on the deployment server
 
-### Préparation de votre application
-Votre application doit avoir :
-- Un `Dockerfile`
-- Des tests unitaires exécutables avec `pytest`
-- Un `requirements.txt` pour Python
+### Preparing Your Application
+Your app should include:
+- A `Dockerfile`
+- Unit tests runnable with `pytest`
+- A `requirements.txt` for Python dependencies
 
-## Connexion aux instances
+## Connecting to Instances
 
 ```bash
 # Jenkins Controller
 ssh -i ~/.ssh/skool-key.pem ec2-user@<JENKINS_IP>
 
-# Serveur de déploiement
+# Deployment Server
 ssh -i ~/.ssh/skool-key.pem ec2-user@<DEPLOYMENT_IP>
 ```
 
-## Nettoyage
 
-Pour détruire toute l'infrastructure :
+## Cleanup
+
+To destroy all infrastructure:
 ```bash
 cd terraform
 terraform destroy -auto-approve
 ```
 
-## Dépannage
+## Troubleshooting
 
-### Erreur de connexion SSH
-- Vérifiez les permissions de la clé : `chmod 400 ~/.ssh/skool-key.pem`
-- Ajoutez les clés hôtes : `ssh-keyscan -H <IP> >> ~/.ssh/known_hosts`
+### SSH Connection Error
+- Check key permissions: `chmod 400 ~/.ssh/skool-key.pem`
+- Add host keys: `ssh-keyscan -H <IP> >> ~/.ssh/known_hosts`
 
-### Jenkins ne démarre pas
-- Vérifiez les logs : `sudo journalctl -u jenkins -f`
-- Redémarrez le service : `sudo systemctl restart jenkins`
+### Jenkins Not Starting
+- Check logs: `sudo journalctl -u jenkins -f`
+- Restart service: `sudo systemctl restart jenkins`
 
-### Pipeline échoue
-- Vérifiez les credentials Docker Hub
-- Assurez-vous que le repo Git est accessible
-- Vérifiez les logs du build Jenkins
+### Pipeline Failure
+- Check Docker Hub credentials
+- Ensure the Git repo is accessible
+- Check Jenkins build logs
 
-### Problème de disque
-Si vous voyez des avertissements de disque, l'instance a été configurée avec 50GB.
+### Disk Issues
+If you see disk warnings, the instance is configured with 50GB.
 
-### Montage d'un stockage temporaire sur /tmp
-Pour éviter les problèmes d'espace lors des builds ou des installations, il est recommandé de monter un stockage temporaire de 2G sur `/tmp` :
+### Mount Temporary Storage on /tmp
+To avoid space issues during builds or installs, mount a 2G temporary storage on `/tmp`:
 
 ```bash
 sudo mount -t tmpfs -o size=2G tmpfs /tmp
 ```
 
-Pour rendre ce montage persistant, ajoutez la ligne suivante à `/etc/fstab` :
+To make this persistent, add the following line to `/etc/fstab`:
 
 ```bash
 tmpfs /tmp tmpfs defaults,size=2G 0 0
 ```
 
-## Personnalisation
+## Customization
 
-### Changer la région AWS
-Modifiez `terraform/main.tf` :
+### Change AWS Region
+Edit `terraform/main.tf`:
 ```hcl
 provider "aws" {
-  region = "eu-west-1"  # ou autre région
+  region = "eu-west-1"  # or another region
 }
 ```
 
-### Changer le type d'instance
-Modifiez la variable `instance_type` dans `terraform/main.tf` :
+### Change Instance Type
+Edit the `instance_type` variable in `terraform/main.tf`:
 ```hcl
 variable "instance_type" {
-  default = "t3.small"  # ou autre type
+  default = "t3.small"  # or another type
 }
 ```
 
-### Ajouter des plugins Jenkins
-Modifiez `ansible/deploy_jenkins.yml` pour installer des plugins supplémentaires.
+### Add Jenkins Plugins
+Edit `ansible/deploy_jenkins.yml` to install additional plugins.
 
 ## Support
 
-Si vous rencontrez des problèmes :
-1. Vérifiez les logs Ansible/Terraform
-2. Consultez les issues GitHub
-3. Vérifiez votre configuration AWS
+If you encounter issues:
+1. Check Ansible/Terraform logs
+2. Check GitHub issues
+3. Verify your AWS configuration
 
-## Licence
+## License
 
-Ce projet est sous licence MIT.
-
-## test
-3
+This project is MIT licensed.

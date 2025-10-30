@@ -45,14 +45,27 @@ pipeline {
         stage('Deploy to EC2') {
             steps {
                 script {
-                    sh """
-                        ssh -o StrictHostKeyChecking=no -i ~/.ssh/skool-key.pem ec2-user@54.91.166.242 '
-                            docker pull ${IMAGE_NAME}:${env.BUILD_NUMBER}
-                            docker stop flask-app || true
-                            docker rm flask-app || true
-                            docker run -d --name flask-app -p 5000:8000 ${IMAGE_NAME}:${env.BUILD_NUMBER}
-                        '
-                    """
+                    try {
+                        sh """
+                            ssh -o StrictHostKeyChecking=no -i ~/.ssh/skool-key.pem ec2-user@54.91.166.242 '
+                                docker pull ${IMAGE_NAME}:${env.BUILD_NUMBER}
+                                docker stop flask-app || true
+                                docker rm flask-app || true
+                                docker run -d --name flask-app -p 5000:8000 ${IMAGE_NAME}:${env.BUILD_NUMBER}
+                            '
+                        """
+                    } catch (err) {
+                        // Rollback: restart the container with the previous 'latest' image
+                        sh """
+                            ssh -o StrictHostKeyChecking=no -i ~/.ssh/skool-key.pem ec2-user@54.91.166.242 '
+                                docker pull ${IMAGE_NAME}:latest
+                                docker stop flask-app || true
+                                docker rm flask-app || true
+                                docker run -d --name flask-app -p 5000:8000 ${IMAGE_NAME}:latest
+                            '
+                        """
+                        error("Déploiement échoué, rollback effectué avec l'image 'latest'.")
+                    }
                 }
             }
         }
