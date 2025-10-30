@@ -64,7 +64,7 @@ pipeline {
                                 docker run -d --name flask-app -p 5000:8000 ${IMAGE_NAME}:latest
                             '
                         """
-                        error("Déploiement échoué, rollback effectué avec l'image 'latest'.")
+                        error("Deployment failed, rollback performed with the 'latest' image.")
                     }
                 }
             }
@@ -77,11 +77,11 @@ pipeline {
                 channel: '#aws-jenkins-cicd',
                 color: 'good',
                 message: """
-                    ✅ *Déploiement réussi* - ${env.JOB_NAME}
-                    *Branche:* ${GIT_BRANCH}
+                    ✅ *Deployment succeeded* - ${env.JOB_NAME}
+                    *Branch:* ${GIT_BRANCH}
                     *Build:* #${env.BUILD_NUMBER}
-                    *Durée:* ${currentBuild.durationString.replace(' and counting', '')}
-                    *Lien:* ${env.BUILD_URL}
+                    *Duration:* ${currentBuild.durationString.replace(' and counting', '')}
+                    *Link:* ${env.BUILD_URL}
                 """.stripIndent()
             )
         }
@@ -90,11 +90,11 @@ pipeline {
                 channel: '#aws-jenkins-cicd',
                 color: 'danger',
                 message: """
-                    ❌ *Déploiement échoué* - ${env.JOB_NAME}
-                    *Branche:* ${GIT_BRANCH}
+                    ❌ *Deployment failed* - ${env.JOB_NAME}
+                    *Branch:* ${GIT_BRANCH}
                     *Build:* #${env.BUILD_NUMBER}
-                    *Durée:* ${currentBuild.durationString.replace(' and counting', '')}
-                    *Lien:* ${env.BUILD_URL}
+                    *Duration:* ${currentBuild.durationString.replace(' and counting', '')}
+                    *Link:* ${env.BUILD_URL}
                 """.stripIndent()
             )
         }
@@ -103,10 +103,10 @@ pipeline {
                 channel: '#aws-jenkins-cicd',
                 color: 'warning',
                 message: """
-                    ⚠️ *Build instable* - ${env.JOB_NAME}
-                    *Branche:* ${GIT_BRANCH}
+                    ⚠️ *Unstable build* - ${env.JOB_NAME}
+                    *Branch:* ${GIT_BRANCH}
                     *Build:* #${env.BUILD_NUMBER}
-                    *Lien:* ${env.BUILD_URL}
+                    *Link:* ${env.BUILD_URL}
                 """.stripIndent()
             )
         }
