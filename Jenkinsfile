@@ -59,14 +59,44 @@ pipeline {
     }
 
     post {
-        always {
-            script {
-                try {
-                    sh 'docker rmi ${IMAGE_NAME}:${BUILD_NUMBER}'
-                } catch (Exception e) {
-                    echo 'Failed to remove Docker image'
-                }
-            }
+        success {
+            slackSend(
+                channel: '#aws-jenkins-cicd',
+                color: 'good',
+                message: """
+                    ✅ *Déploiement réussi* - ${env.JOB_NAME}
+                    *Branche:* ${GIT_BRANCH}
+                    *Build:* #${env.BUILD_NUMBER}
+                    *Durée:* ${currentBuild.durationString.replace(' and counting', '')}
+                    *Lien:* ${env.BUILD_URL}
+                """.stripIndent()
+            )
+        }
+        failure {
+            slackSend(
+                channel: '#aws-jenkins-cicd',
+                color: 'danger',
+                message: """
+                    ❌ *Déploiement échoué* - ${env.JOB_NAME}
+                    *Branche:* ${GIT_BRANCH}
+                    *Build:* #${env.BUILD_NUMBER}
+                    *Durée:* ${currentBuild.durationString.replace(' and counting', '')}
+                    *Lien:* ${env.BUILD_URL}
+                """.stripIndent()
+            )
+        }
+        unstable {
+            slackSend(
+                channel: '#aws-jenkins-cicd',
+                color: 'warning',
+                message: """
+                    ⚠️ *Build instable* - ${env.JOB_NAME}
+                    *Branche:* ${GIT_BRANCH}
+                    *Build:* #${env.BUILD_NUMBER}
+                    *Lien:* ${env.BUILD_URL}
+                """.stripIndent()
+            )
         }
     }
+
 }
